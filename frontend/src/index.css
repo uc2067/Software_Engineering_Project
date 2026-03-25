@@ -51,6 +51,7 @@ a {
   background: rgba(7, 12, 24, 0.78);
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(20px);
+  overflow-y: auto;
 }
 
 .logo-wrap {
@@ -83,6 +84,48 @@ a {
   font-size: 0.92rem;
 }
 
+.user-info {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 20px;
+}
+
+.user-name {
+  margin: 0 0 4px;
+  font-weight: 600;
+  color: white;
+  font-size: 0.95rem;
+}
+
+.user-role {
+  margin: 0 0 10px;
+  color: #93c5fd;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.logout-btn {
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.logout-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fecaca;
+}
+
 .side-section {
   display: grid;
   gap: 10px;
@@ -95,6 +138,7 @@ a {
   color: #cbd5e1;
   background: rgba(255, 255, 255, 0.02);
   transition: 0.2s ease;
+  cursor: pointer;
 }
 
 .nav-link:hover {
@@ -129,6 +173,7 @@ a {
 
 .main-area {
   padding: 28px;
+  overflow-y: auto;
 }
 
 .toast {
@@ -307,20 +352,30 @@ a {
 input,
 select,
 textarea {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.04);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
-  padding: 12px 14px;
-  outline: none;
+  width: 100% !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 14px !important;
+  padding: 12px 14px !important;
+  outline: none !important;
+  pointer-events: auto !important;
+  cursor: text !important;
+  font-family: inherit !important;
+  font-size: 1rem !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
 }
 
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: rgba(96, 165, 250, 0.8);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+  border-color: rgba(96, 165, 250, 0.8) !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15) !important;
+  outline: none !important;
 }
 
 .primary-btn,

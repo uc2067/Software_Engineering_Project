@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import { AuthProvider, useAuth } from "./AuthContext";
+import LoginPage from "./LoginPage";
+import RegisterPage from "./RegisterPage";
 
 const API_BASE = "http://127.0.0.1:8000";
 
@@ -20,8 +23,10 @@ const emptyProfile = (userId = 1) => ({
   availability_status: "",
 });
 
-export default function App() {
-  // Core data
+function AppContent() {
+  // Auth
+  const { user, logout, token } = useAuth();
+  const [showRegister, setShowRegister] = useState(false);
   const [dashboard, setDashboard] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [users, setUsers] = useState([]);
@@ -35,6 +40,8 @@ export default function App() {
   // Admin create user
   const [newUser, setNewUser] = useState({
     name: "",
+    email: "",
+    password: "",
     role: "Developer",
   });
 
@@ -62,10 +69,18 @@ export default function App() {
     setTimeout(() => setToast(""), 2500);
   };
 
+  const getAuthHeaders = () => {
+    return {
+      Authorization: `Bearer ${token}`,
+    };
+  };
+
   const fetchDashboard = async () => {
     setLoadingDashboard(true);
     try {
-      const res = await axios.get(`${API_BASE}/dashboard`);
+      const res = await axios.get(`${API_BASE}/dashboard`, {
+        headers: getAuthHeaders(),
+      });
       setDashboard(res.data);
     } catch (err) {
       console.error(err);
@@ -78,7 +93,9 @@ export default function App() {
   const fetchTasks = async () => {
     setLoadingTasks(true);
     try {
-      const res = await axios.get(`${API_BASE}/tasks`);
+      const res = await axios.get(`${API_BASE}/tasks`, {
+        headers: getAuthHeaders(),
+      });
       setTasks(res.data);
     } catch (err) {
       console.error(err);
@@ -90,7 +107,9 @@ export default function App() {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/users`);
+      const res = await axios.get(`${API_BASE}/users`, {
+        headers: getAuthHeaders(),
+      });
       setUsers(res.data);
       if (res.data.length > 0 && !selectedUserId) {
         setSelectedUserId(res.data[0].id);
@@ -104,7 +123,9 @@ export default function App() {
   const fetchProfiles = async () => {
     setLoadingProfiles(true);
     try {
-      const res = await axios.get(`${API_BASE}/profiles`);
+      const res = await axios.get(`${API_BASE}/profiles`, {
+        headers: getAuthHeaders(),
+      });
       setProfiles(res.data);
     } catch (err) {
       console.error(err);
@@ -117,7 +138,9 @@ export default function App() {
   const loadProfile = async (userId) => {
     setLoadingProfileForm(true);
     try {
-      const res = await axios.get(`${API_BASE}/profile/${userId}`);
+      const res = await axios.get(`${API_BASE}/profile/${userId}`, {
+        headers: getAuthHeaders(),
+      });
       setProfileForm(res.data);
     } catch (err) {
       setProfileForm(emptyProfile(userId));
@@ -127,17 +150,19 @@ export default function App() {
   };
 
   useEffect(() => {
-    const init = async () => {
-      await Promise.all([
-        fetchDashboard(),
-        fetchTasks(),
-        fetchUsers(),
-        fetchProfiles(),
-      ]);
-      await loadProfile(1);
-    };
-    init();
-  }, []);
+    if (user && token) {
+      const init = async () => {
+        await Promise.all([
+          fetchDashboard(),
+          fetchTasks(),
+          fetchUsers(),
+          fetchProfiles(),
+        ]);
+        await loadProfile(1);
+      };
+      init();
+    }
+  }, [user, token]);
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
@@ -163,7 +188,9 @@ export default function App() {
     setSavingProfile(true);
     try {
       const payload = { ...profileForm, user_id: selectedUserId };
-      const res = await axios.post(`${API_BASE}/profile`, payload);
+      const res = await axios.post(`${API_BASE}/profile`, payload, {
+        headers: getAuthHeaders(),
+      });
       setProfileForm(res.data);
       await Promise.all([fetchProfiles(), fetchDashboard()]);
       showToast("Profile saved successfully");
@@ -180,15 +207,25 @@ export default function App() {
       showToast("Please enter a user name");
       return;
     }
+    if (!newUser.email.trim()) {
+      showToast("Please enter an email");
+      return;
+    }
+    if (!newUser.password.trim()) {
+      showToast("Please enter a password");
+      return;
+    }
 
     try {
-      await axios.post(`${API_BASE}/users`, newUser);
-      setNewUser({ name: "", role: "Developer" });
+      await axios.post(`${API_BASE}/users`, newUser, {
+        headers: getAuthHeaders(),
+      });
+      setNewUser({ name: "", email: "", password: "", role: "Developer" });
       await fetchUsers();
       showToast("User created successfully");
     } catch (err) {
       console.error(err);
-      showToast("Error creating user");
+      showToast(err.response?.data?.detail || "Error creating user");
     }
   };
 
@@ -199,10 +236,14 @@ export default function App() {
     }
 
     try {
-      await axios.post(`${API_BASE}/tasks`, {
-        ...newTask,
-        assignee_id: newTask.assignee_id ? Number(newTask.assignee_id) : null,
-      });
+      await axios.post(
+        `${API_BASE}/tasks`,
+        {
+          ...newTask,
+          assignee_id: newTask.assignee_id ? Number(newTask.assignee_id) : null,
+        },
+        { headers: getAuthHeaders() }
+      );
       setNewTask({
         title: "",
         description: "",
@@ -226,6 +267,14 @@ export default function App() {
     };
   }, [tasks]);
 
+  if (!user) {
+    return showRegister ? (
+      <RegisterPage onSwitchToLogin={() => setShowRegister(false)} />
+    ) : (
+      <LoginPage onSwitchToRegister={() => setShowRegister(true)} />
+    );
+  }
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -237,13 +286,30 @@ export default function App() {
           </div>
         </div>
 
+        <div className="user-info">
+          <p className="user-name">{user.name}</p>
+          <p className="user-role">{user.role}</p>
+          <button className="logout-btn" onClick={logout}>
+            Logout
+          </button>
+        </div>
+
         <div className="side-section">
           <a href="#overview" className="nav-link">Overview</a>
-          <a href="#admin" className="nav-link">Admin</a>
-          <a href="#scrum" className="nav-link">Scrum</a>
+          {user.role === "Admin" && (
+            <a href="#admin" className="nav-link">Admin</a>
+          )}
+          {user.role === "Scrum Master" && (
+            <a href="#scrum" className="nav-link">Scrum</a>
+          )}
           <a href="#profiles" className="nav-link">Profiles</a>
           <a href="#directory" className="nav-link">Team Directory</a>
           <a href="#tasks" className="nav-link">Tasks</a>
+          
+          <div className="sidebar-actions" style={{marginTop: "20px", paddingTop: "20px", borderTop: "1px solid rgba(255, 255, 255, 0.1)", display: "grid", gap: "8px"}}>
+            <button className="secondary-btn" onClick={fetchDashboard} style={{fontSize: "0.9rem", padding: "8px 12px"}}>Refresh Dashboard</button>
+            <button className="secondary-btn" onClick={fetchTasks} style={{fontSize: "0.9rem", padding: "8px 12px"}}>Refresh Tasks</button>
+          </div>
         </div>
 
         <div className="side-mini-card">
@@ -268,24 +334,7 @@ export default function App() {
           </div>
 
           <div className="hero-actions">
-            <div className="field-group short">
-              <label style={{ marginBottom: 6, display: "block" }}>Current Role</label>
-              <select
-                value={currentRole}
-                onChange={(e) => setCurrentRole(e.target.value)}
-              >
-                <option>Admin</option>
-                <option>Scrum Master</option>
-                <option>Developer</option>
-              </select>
-            </div>
-
-            <button className="secondary-btn" onClick={fetchDashboard}>
-              Refresh Dashboard
-            </button>
-            <button className="secondary-btn" onClick={fetchTasks}>
-              Refresh Tasks
-            </button>
+            <p style={{ color: "#cbd5e1", fontSize: "0.95rem", margin: "0" }}>Role: <strong>{user.role}</strong></p>
           </div>
         </section>
 
@@ -358,7 +407,7 @@ export default function App() {
           </div>
         </section>
 
-        {currentRole === "Admin" && (
+        {user.role === "Admin" && (
           <section id="admin" className="content-section">
             <div className="section-head">
               <h3>Admin Panel</h3>
@@ -403,7 +452,7 @@ export default function App() {
           </section>
         )}
 
-        {currentRole === "Scrum Master" && (
+        {user.role === "Scrum Master" && (
           <section id="scrum" className="content-section">
             <div className="section-head">
               <h3>Scrum Master Panel</h3>
@@ -729,5 +778,13 @@ export default function App() {
         </section>
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
