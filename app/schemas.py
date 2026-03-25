@@ -2,6 +2,45 @@ from typing import Optional
 from pydantic import BaseModel
 
 
+class UserRegister(BaseModel):
+    name: str
+    email: str
+    password: str
+    role: Optional[str] = "Developer"
+
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    user_id: int
+    user_name: str
+    user_role: str
+
+
+class UserResponse(BaseModel):
+    id: int
+    name: str
+    email: str
+    role: str
+
+    class Config:
+        from_attributes = True
+
+
+class UserResponseWithoutEmail(BaseModel):
+    id: int
+    name: str
+    role: str
+
+    class Config:
+        from_attributes = True
+
+
 class ProfileCreate(BaseModel):
     user_id: int
     full_name: Optional[str] = ""

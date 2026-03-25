@@ -1,5 +1,6 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.middleware.cors import CORSMiddleware
+from datetime import timedelta
 from sqlalchemy.orm import Session
 
 from .database import Base, engine, get_db
@@ -12,6 +13,16 @@ from .schemas import (
     UserResponse,
     UserCreate,
     TaskCreate,
+    UserLogin,
+    UserRegister,
+    Token,
+)
+from .auth import (
+    hash_password,
+    verify_password,
+    create_access_token,
+    get_current_user_from_request,
+    ACCESS_TOKEN_EXPIRE_MINUTES,
 )
 from .seed import seed_data
 
@@ -32,6 +43,86 @@ seed_data()
 @app.get("/")
 def root():
     return {"message": "IntelliTrack backend is running"}
+
+
+# Authentication endpoints
+@app.post("/auth/register", response_model=Token)
+def register(user_data: UserRegister, db: Session = Depends(get_db)):
+    """Register a new user."""
+    # Check if user already exists
+    existing_user = db.query(User).filter(User.email == user_data.email).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered",
+        )
+
+    # Create new user
+    hashed_password = hash_password(user_data.password)
+    new_user = User(
+        name=user_data.name,
+        email=user_data.email,
+        password_hash=hashed_password,
+        role=user_data.role or "Developer",
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    # Create access token
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": new_user.email}, expires_delta=access_token_expires
+    )
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user_id": new_user.id,
+        "user_name": new_user.name,
+        "user_role": new_user.role,
+    }
+
+
+@app.post("/auth/login", response_model=Token)
+def login(user_data: UserLogin, db: Session = Depends(get_db)):
+    """Login user and return access token."""
+    # Find user by email
+    user = db.query(User).filter(User.email == user_data.email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+        )
+
+    # Verify password
+    if not verify_password(user_data.password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+        )
+
+    # Create access token
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user_id": user.id,
+        "user_name": user.name,
+        "user_role": user.role,
+    }
+
+
+@app.get("/auth/me", response_model=UserResponse)
+async def get_current_user_endpoint(
+    current_user: User = Depends(get_current_user_from_request),
+):
+    """Get current authenticated user."""
+    return current_user
 
 
 @app.get("/users", response_model=list[UserResponse])
@@ -141,7 +232,21 @@ def get_dashboard(db: Session = Depends(get_db)):
 
 @app.post("/users", response_model=UserResponse)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    new_user = User(name=user.name, role=user.role)
+    # Check if user already exists
+    existing_user = db.query(User).filter(User.email == user.email).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered",
+        )
+    
+    hashed_password = hash_password(user.password)
+    new_user = User(
+        name=user.name,
+        email=user.email,
+        password_hash=hashed_password,
+        role=user.role,
+    )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)

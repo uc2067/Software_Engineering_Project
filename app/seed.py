@@ -1,5 +1,6 @@
 from .database import SessionLocal, engine, Base
 from .models import User, DeveloperProfile, Sprint, Task
+from .auth import hash_password
 
 
 def seed_data():
@@ -11,9 +12,25 @@ def seed_data():
         db.close()
         return
 
-    u1 = User(name="Alice", role="Developer")
-    u2 = User(name="Bob", role="Developer")
-    u3 = User(name="Charlie", role="Scrum Master")
+    # Create users with password hashing
+    u1 = User(
+        name="Alice",
+        email="alice@example.com",
+        password_hash=hash_password("password123"),
+        role="Developer"
+    )
+    u2 = User(
+        name="Bob",
+        email="bob@example.com",
+        password_hash=hash_password("password123"),
+        role="Developer"
+    )
+    u3 = User(
+        name="Charlie",
+        email="charlie@example.com",
+        password_hash=hash_password("password123"),
+        role="Scrum Master"
+    )
     db.add_all([u1, u2, u3])
     db.commit()
 
