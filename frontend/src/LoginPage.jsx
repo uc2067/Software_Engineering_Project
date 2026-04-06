@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "./AuthContext";
+import { SplineScene } from "./components/ui/splite";
+import { Spotlight } from "./components/ui/spotlight";
+import { LiquidMetalButton } from "./components/ui/liquid-metal-button";
 import "./LoginPage.css";
 
 export default function LoginPage({ onSwitchToRegister }) {
@@ -10,7 +13,7 @@ export default function LoginPage({ onSwitchToRegister }) {
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     setError("");
     setLoading(true);
 
@@ -21,7 +24,6 @@ export default function LoginPage({ onSwitchToRegister }) {
       }
 
       await login(email, password);
-      // Navigation will happen in App.jsx when user is set
     } catch (err) {
       setError(err.message || "Login failed. Please try again.");
     } finally {
@@ -30,69 +32,84 @@ export default function LoginPage({ onSwitchToRegister }) {
   };
 
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <h1 className="login-title">IntelliTrack</h1>
-        <p className="login-subtitle">Task & Workload Management System</p>
+    <div className="login-split dark">
+      {/* Left side — Login form */}
+      <div className="login-form-side">
+        <div className="login-glass-card">
+          <h1 className="login-dark-title">INTELLITRACT</h1>
 
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="form-input"
-              disabled={loading}
-              autoComplete="email"
-            />
+          <form onSubmit={handleSubmit} className="login-dark-form">
+            <div className="login-dark-field">
+              <label htmlFor="email">Email</label>
+              <input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="login-dark-input"
+                disabled={loading}
+                autoComplete="email"
+              />
+            </div>
+
+            <div className="login-dark-field">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="login-dark-input"
+                disabled={loading}
+                autoComplete="current-password"
+              />
+            </div>
+
+            {error && <div className="login-dark-error">{error}</div>}
+
+            <div className="flex justify-center">
+              <LiquidMetalButton
+                label={loading ? "Logging in..." : "Login"}
+                onClick={handleSubmit}
+              />
+            </div>
+          </form>
+
+          <div className="login-dark-footer">
+            <p>
+              Don't have an account?{" "}
+              <button
+                type="button"
+                onClick={onSwitchToRegister}
+                className="login-dark-switch"
+                disabled={loading}
+              >
+                Register here
+              </button>
+            </p>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="form-input"
-              disabled={loading}
-              autoComplete="current-password"
-            />
+          <div className="login-dark-demo">
+            <p className="demo-head">Demo Credentials</p>
+            <p>alice@example.com &nbsp;/&nbsp; password123</p>
           </div>
-
-          {error && <div className="error-message">{error}</div>}
-
-          <button
-            type="submit"
-            className="login-button"
-            disabled={loading}
-          >
-            {loading ? "Logging in..." : "Login"}
-          </button>
-        </form>
-
-        <div className="login-footer">
-          <p>
-            Don't have an account?{" "}
-            <button
-              type="button"
-              onClick={onSwitchToRegister}
-              className="switch-button"
-              disabled={loading}
-            >
-              Register here
-            </button>
-          </p>
         </div>
+      </div>
 
-        <div className="demo-credentials">
-          <p className="demo-label">Demo Credentials:</p>
-          <p>Email: alice@example.com</p>
-          <p>Password: password123</p>
+      {/* Right side — 3D Scene */}
+      <div className="login-scene-side">
+        <Spotlight
+          className="-top-40 left-0 md:left-60 md:-top-20"
+          fill="white"
+        />
+
+        <div className="scene-3d">
+          <SplineScene
+            scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
+            className="w-full h-full"
+          />
         </div>
       </div>
     </div>
