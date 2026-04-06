@@ -1,155 +1,185 @@
-.register-container {
+/* Split-screen register layout (matches LoginPage.css) */
+html.dark, .dark {
+  background: #000;
+}
+
+.register-split {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  min-height: 100vh;
+  background: #000;
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+}
+
+/* Left side — form */
+.register-form-side {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
-}
-
-.register-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-  padding: 40px 35px;
-  width: 100%;
-  max-width: 420px;
-}
-
-.register-title {
-  margin: 0 0 10px 0;
-  font-size: 32px;
-  font-weight: 700;
-  color: #667eea;
-  text-align: center;
-}
-
-.register-subtitle {
-  margin: 0 0 30px 0;
-  font-size: 14px;
-  color: #999;
-  text-align: center;
-}
-
-.register-form {
-  margin-bottom: 25px;
-}
-
-.form-group {
-  margin-bottom: 18px;
+  padding: 40px;
+  background: transparent;
   position: relative;
   z-index: 10;
 }
 
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 600;
-  color: #333;
-  font-size: 14px;
+.register-glass-card {
+  width: 100%;
+  max-width: 420px;
 }
 
-.form-input {
+.register-dark-title {
+  margin: 0 0 32px;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #ea580c;
+  letter-spacing: 0.15em;
+  text-align: center;
+  font-family: "Saira Stencil", sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+}
+
+/* Form */
+.register-dark-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.register-dark-field-row {
+  display: flex;
+  gap: 16px;
+}
+
+.register-dark-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.register-dark-field label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.register-dark-input {
   width: 100% !important;
-  padding: 11px 15px !important;
-  border: 1px solid #ddd !important;
-  border-radius: 6px !important;
-  font-size: 14px !important;
+  padding: 12px 14px !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: white !important;
+  font-size: 1rem !important;
   font-family: inherit !important;
-  transition: all 0.3s ease !important;
-  box-sizing: border-box !important;
-  pointer-events: auto !important;
-  cursor: text !important;
-  background: white !important;
-  color: #333 !important;
-  position: relative !important;
-  z-index: 11 !important;
-}
-
-.form-input::placeholder {
-  color: #999 !important;
-}
-
-.form-input:focus {
   outline: none !important;
-  border-color: #667eea !important;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+  transition: all 0.25s ease !important;
 }
 
-.form-input:disabled {
-  background-color: #f5f5f5 !important;
+.register-dark-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 14px center !important;
+  background-size: 16px !important;
+  padding-right: 40px !important;
+}
+
+.register-dark-select option {
+  background: #0f172a;
+  color: white;
+}
+
+.register-dark-input::placeholder {
+  color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.register-dark-input:focus {
+  border-color: rgba(99, 102, 241, 0.8) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.register-dark-input:disabled {
+  opacity: 0.5;
   cursor: not-allowed !important;
 }
 
-.error-message {
-  color: #e74c3c;
-  font-size: 13px;
-  margin-bottom: 15px;
-  padding: 10px;
-  background-color: #fee;
-  border-radius: 6px;
-  border-left: 3px solid #e74c3c;
+.register-dark-error {
+  color: #f87171;
+  font-size: 0.9rem;
+  padding: 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 8px;
+  border-left: 3px solid #ef4444;
 }
 
-.register-button {
-  width: 100%;
-  padding: 12px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.register-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-}
-
-.register-button:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.register-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.register-footer {
+/* Footer */
+.register-dark-footer {
   text-align: center;
   padding-top: 20px;
-  border-top: 1px solid #eee;
+  margin-bottom: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.register-footer p {
+.register-dark-footer p {
   margin: 0;
-  font-size: 14px;
-  color: #333;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.5);
 }
 
-.switch-button {
+.register-dark-switch {
   background: none;
   border: none;
-  color: #667eea;
+  color: #818cf8;
   cursor: pointer;
   font-weight: 600;
   padding: 0;
-  font-size: 14px;
-  transition: color 0.3s ease;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
   text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-.switch-button:hover:not(:disabled) {
-  color: #764ba2;
+.register-dark-switch:hover {
+  color: #a5b4fc;
 }
 
-.switch-button:disabled {
-  opacity: 0.7;
+.register-dark-switch:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Right side — 3D Scene */
+.register-scene-side {
+  position: relative;
+  background: #000;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.scene-3d {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .register-split {
+    grid-template-columns: 1fr;
+  }
+
+  .register-scene-side {
+    min-height: 400px;
+    order: -1;
+  }
+
+  .register-dark-field-row {
+    flex-direction: column;
+    gap: 16px;
+  }
 }

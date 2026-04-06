@@ -3,6 +3,8 @@ import axios from "axios";
 import { AuthProvider, useAuth } from "./AuthContext";
 import LoginPage from "./LoginPage";
 import RegisterPage from "./RegisterPage";
+import HomePage from "./HomePage";
+import { ThemeToggle } from "./components/ui/theme-toggle";
 
 const API_BASE = "http://127.0.0.1:8000";
 
@@ -24,18 +26,14 @@ const emptyProfile = (userId = 1) => ({
 });
 
 function AppContent() {
-  // Auth
   const { user, logout, token } = useAuth();
-  const [showRegister, setShowRegister] = useState(false);
+  const [currentPage, setCurrentPage] = useState("home");
   const [dashboard, setDashboard] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [users, setUsers] = useState([]);
   const [profiles, setProfiles] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState(1);
   const [profileForm, setProfileForm] = useState(emptyProfile(1));
-
-  // Role-based UI
-  const [currentRole, setCurrentRole] = useState("Admin");
 
   // Admin create user
   const [newUser, setNewUser] = useState({
@@ -63,6 +61,9 @@ function AppContent() {
 
   // Toast
   const [toast, setToast] = useState("");
+
+  // Active nav for sidebar
+  const [activeNav, setActiveNav] = useState("overview");
 
   const showToast = (message) => {
     setToast(message);
@@ -268,21 +269,60 @@ function AppContent() {
   }, [tasks]);
 
   if (!user) {
-    return showRegister ? (
-      <RegisterPage onSwitchToLogin={() => setShowRegister(false)} />
-    ) : (
-      <LoginPage onSwitchToRegister={() => setShowRegister(true)} />
-    );
+    if (currentPage === "login") {
+      return (
+        <LoginPage
+          onSwitchToRegister={() => setCurrentPage("register")}
+          onBackToHome={() => setCurrentPage("home")}
+        />
+      );
+    }
+    if (currentPage === "register") {
+      return (
+        <RegisterPage
+          onSwitchToLogin={() => setCurrentPage("login")}
+          onBackToHome={() => setCurrentPage("home")}
+        />
+      );
+    }
+    return <HomePage onNavigateToLogin={() => setCurrentPage("login")} />;
   }
+
+  const getStatusClass = (status) => {
+    if (status === "To Do") return "status-todo";
+    if (status === "In Progress") return "status-in-progress";
+    if (status === "Done") return "status-done";
+    return "";
+  };
+
+  const getPillClass = (status) => {
+    if (status === "To Do") return "pill-todo";
+    if (status === "In Progress") return "pill-in-progress";
+    if (status === "Done") return "pill-done";
+    return "";
+  };
+
+  // Circular progress
+  const completionPct = dashboard?.completion_percentage ?? 0;
+  const circumference = 2 * Math.PI * 45;
+  const progressOffset = circumference - (completionPct / 100) * circumference;
+
+  // Max workload for bar scaling
+  const maxWorkload = dashboard?.workload
+    ? Math.max(...Object.values(dashboard.workload), 1)
+    : 1;
 
   return (
     <div className="app-shell">
       <aside className="sidebar">
         <div className="logo-wrap">
-          <div className="logo-badge">IT</div>
-          <div>
-            <h1>IntelliTrack</h1>
-            <p>Sprint 04 Workspace</p>
+          <img src="/intellitract-logo.png" alt="IntelliTract" style={{ height: 34, objectFit: "contain", flexShrink: 0 }} />
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <h1>INTELLITRACT</h1>
+            <p>Workspace</p>
+          </div>
+          <div style={{ flexShrink: 0 }}>
+            <ThemeToggle />
           </div>
         </div>
 
@@ -295,20 +335,68 @@ function AppContent() {
         </div>
 
         <div className="side-section">
-          <a href="#overview" className="nav-link">Overview</a>
+          <a
+            href="#overview"
+            className={`nav-link ${activeNav === "overview" ? "active" : ""}`}
+            onClick={() => setActiveNav("overview")}
+          >
+            Overview
+          </a>
           {user.role === "Admin" && (
-            <a href="#admin" className="nav-link">Admin</a>
+            <a
+              href="#admin"
+              className={`nav-link ${activeNav === "admin" ? "active" : ""}`}
+              onClick={() => setActiveNav("admin")}
+            >
+              Admin
+            </a>
           )}
           {user.role === "Scrum Master" && (
-            <a href="#scrum" className="nav-link">Scrum</a>
+            <a
+              href="#scrum"
+              className={`nav-link ${activeNav === "scrum" ? "active" : ""}`}
+              onClick={() => setActiveNav("scrum")}
+            >
+              Scrum
+            </a>
           )}
-          <a href="#profiles" className="nav-link">Profiles</a>
-          <a href="#directory" className="nav-link">Team Directory</a>
-          <a href="#tasks" className="nav-link">Tasks</a>
-          
-          <div className="sidebar-actions" style={{marginTop: "20px", paddingTop: "20px", borderTop: "1px solid rgba(255, 255, 255, 0.1)", display: "grid", gap: "8px"}}>
-            <button className="secondary-btn" onClick={fetchDashboard} style={{fontSize: "0.9rem", padding: "8px 12px"}}>Refresh Dashboard</button>
-            <button className="secondary-btn" onClick={fetchTasks} style={{fontSize: "0.9rem", padding: "8px 12px"}}>Refresh Tasks</button>
+          <a
+            href="#profiles"
+            className={`nav-link ${activeNav === "profiles" ? "active" : ""}`}
+            onClick={() => setActiveNav("profiles")}
+          >
+            Profiles
+          </a>
+          <a
+            href="#directory"
+            className={`nav-link ${activeNav === "directory" ? "active" : ""}`}
+            onClick={() => setActiveNav("directory")}
+          >
+            Team Directory
+          </a>
+          <a
+            href="#tasks"
+            className={`nav-link ${activeNav === "tasks" ? "active" : ""}`}
+            onClick={() => setActiveNav("tasks")}
+          >
+            Tasks
+          </a>
+
+          <div className="sidebar-actions">
+            <button
+              className="secondary-btn"
+              onClick={fetchDashboard}
+              style={{ fontSize: "0.85rem", padding: "9px 14px" }}
+            >
+              ↻ Refresh Dashboard
+            </button>
+            <button
+              className="secondary-btn"
+              onClick={fetchTasks}
+              style={{ fontSize: "0.85rem", padding: "9px 14px" }}
+            >
+              ↻ Refresh Tasks
+            </button>
           </div>
         </div>
 
@@ -322,46 +410,71 @@ function AppContent() {
       <main className="main-area">
         {toast && <div className="toast">{toast}</div>}
 
+        {/* ── Hero Panel ── */}
         <section id="overview" className="hero-panel">
           <div>
             <p className="eyebrow">Agile Intelligence Platform</p>
             <h2>Modern sprint monitoring and role-based workflow management</h2>
             <p className="hero-copy">
-              IntelliTrack provides a realistic internal product experience for
+              INTELLITRACT provides a realistic internal product experience for
               project administration, sprint task coordination, and structured
               developer profile management through a connected frontend and backend.
             </p>
           </div>
-
           <div className="hero-actions">
-            <p style={{ color: "#cbd5e1", fontSize: "0.95rem", margin: "0" }}>Role: <strong>{user.role}</strong></p>
+            <span className="role-badge">
+              ● Role: {user.role}
+            </span>
           </div>
         </section>
 
+        {/* ── Sprint Dashboard ── */}
         <section className="content-section">
           <div className="section-head">
             <h3>Sprint Dashboard</h3>
-            <span className="tag">Live Data</span>
+            <span className="tag">● Live Data</span>
           </div>
 
           <div className="stats-grid">
-            <div className="stat-card">
-              <span>To Do</span>
-              <h4>{loadingDashboard ? "..." : dashboard?.todo ?? 0}</h4>
+            <div className="stat-card todo-card">
+              <div className="stat-indicator"></div>
+              <span className="stat-label">To Do</span>
+              <h4 className="stat-value">
+                {loadingDashboard ? "..." : dashboard?.todo ?? 0}
+              </h4>
             </div>
-            <div className="stat-card">
-              <span>In Progress</span>
-              <h4>{loadingDashboard ? "..." : dashboard?.in_progress ?? 0}</h4>
+            <div className="stat-card progress-card">
+              <div className="stat-indicator"></div>
+              <span className="stat-label">In Progress</span>
+              <h4 className="stat-value">
+                {loadingDashboard ? "..." : dashboard?.in_progress ?? 0}
+              </h4>
             </div>
-            <div className="stat-card">
-              <span>Done</span>
-              <h4>{loadingDashboard ? "..." : dashboard?.done ?? 0}</h4>
+            <div className="stat-card done-card">
+              <div className="stat-indicator"></div>
+              <span className="stat-label">Done</span>
+              <h4 className="stat-value">
+                {loadingDashboard ? "..." : dashboard?.done ?? 0}
+              </h4>
             </div>
             <div className="stat-card featured">
-              <span>Completion</span>
-              <h4>
-                {loadingDashboard ? "..." : `${dashboard?.completion_percentage ?? 0}%`}
-              </h4>
+              <div className="progress-ring-container">
+                <svg className="progress-ring" width="100" height="100" viewBox="0 0 100 100">
+                  <circle className="progress-ring-bg" cx="50" cy="50" r="45" />
+                  <circle
+                    className="progress-ring-fill"
+                    cx="50"
+                    cy="50"
+                    r="45"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={loadingDashboard ? circumference : progressOffset}
+                  />
+                  <text className="progress-ring-text" x="50" y="50" textAnchor="middle" dominantBaseline="central">
+                    {loadingDashboard ? "..." : `${completionPct}%`}
+                  </text>
+                </svg>
+                <span className="stat-label" style={{ textAlign: "center", marginBottom: 0 }}>Completion</span>
+              </div>
             </div>
           </div>
 
@@ -374,8 +487,16 @@ function AppContent() {
                 {dashboard?.workload &&
                   Object.entries(dashboard.workload).map(([name, count]) => (
                     <div className="list-row" key={name}>
-                      <span>{name}</span>
-                      <strong>{count} task(s)</strong>
+                      <span style={{ minWidth: "120px", fontWeight: 500 }}>{name}</span>
+                      <div className="workload-bar-wrap">
+                        <div className="workload-bar">
+                          <div
+                            className="workload-bar-fill"
+                            style={{ width: `${(count / maxWorkload) * 100}%` }}
+                          />
+                        </div>
+                        <strong>{count} task(s)</strong>
+                      </div>
                     </div>
                   ))}
               </div>
@@ -392,21 +513,22 @@ function AppContent() {
                 </div>
                 <div className="summary-item">
                   <span>To Do</span>
-                  <strong>{taskStats.todo}</strong>
+                  <strong style={{ color: "var(--accent)" }}>{taskStats.todo}</strong>
                 </div>
                 <div className="summary-item">
                   <span>In Progress</span>
-                  <strong>{taskStats.inProgress}</strong>
+                  <strong style={{ color: "var(--warning)" }}>{taskStats.inProgress}</strong>
                 </div>
                 <div className="summary-item">
                   <span>Done</span>
-                  <strong>{taskStats.done}</strong>
+                  <strong style={{ color: "var(--success)" }}>{taskStats.done}</strong>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
+        {/* ── Admin Panel ── */}
         {user.role === "Admin" && (
           <section id="admin" className="content-section">
             <div className="section-head">
@@ -429,6 +551,30 @@ function AppContent() {
                 </div>
 
                 <div className="field-group">
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    placeholder="Enter email address"
+                    value={newUser.email}
+                    onChange={(e) =>
+                      setNewUser((prev) => ({ ...prev, email: e.target.value }))
+                    }
+                  />
+                </div>
+
+                <div className="field-group">
+                  <label>Password</label>
+                  <input
+                    type="password"
+                    placeholder="Set initial password"
+                    value={newUser.password}
+                    onChange={(e) =>
+                      setNewUser((prev) => ({ ...prev, password: e.target.value }))
+                    }
+                  />
+                </div>
+
+                <div className="field-group">
                   <label>Role</label>
                   <select
                     value={newUser.role}
@@ -444,7 +590,7 @@ function AppContent() {
 
                 <div className="full">
                   <button className="primary-btn" type="button" onClick={handleCreateUser}>
-                    Add User
+                    + Add User
                   </button>
                 </div>
               </div>
@@ -452,6 +598,7 @@ function AppContent() {
           </section>
         )}
 
+        {/* ── Scrum Master Panel ── */}
         {user.role === "Scrum Master" && (
           <section id="scrum" className="content-section">
             <div className="section-head">
@@ -541,7 +688,7 @@ function AppContent() {
 
                 <div className="full">
                   <button className="primary-btn" type="button" onClick={handleCreateTask}>
-                    Create Task
+                    + Create Task
                   </button>
                 </div>
               </div>
@@ -549,6 +696,7 @@ function AppContent() {
           </section>
         )}
 
+        {/* ── Developer Profile Management ── */}
         <section id="profiles" className="content-section">
           <div className="section-head">
             <h3>Developer Profile Management</h3>
@@ -573,7 +721,7 @@ function AppContent() {
                 type="button"
                 onClick={() => loadProfile(selectedUserId)}
               >
-                Reload Profile
+                ↻ Reload Profile
               </button>
             </div>
 
@@ -715,6 +863,7 @@ function AppContent() {
           </div>
         </section>
 
+        {/* ── Team Directory ── */}
         <section id="directory" className="content-section">
           <div className="section-head">
             <h3>Team Directory</h3>
@@ -725,8 +874,12 @@ function AppContent() {
             <p className="loading-text">Loading profiles...</p>
           ) : (
             <div className="card-grid">
-              {profiles.map((profile) => (
-                <div className="member-card" key={profile.id}>
+              {profiles.map((profile, i) => (
+                <div
+                  className="member-card"
+                  key={profile.id}
+                  style={{ animationDelay: `${i * 0.08}s` }}
+                >
                   <div className="avatar">
                     {(profile.full_name || "U").slice(0, 1).toUpperCase()}
                   </div>
@@ -751,21 +904,29 @@ function AppContent() {
           )}
         </section>
 
+        {/* ── Sprint Tasks ── */}
         <section id="tasks" className="content-section">
           <div className="section-head">
             <h3>Sprint Tasks</h3>
-            <span className="tag">Live Task Board</span>
+            <span className="tag">● Live Task Board</span>
           </div>
 
           {loadingTasks ? (
             <p className="loading-text">Loading tasks...</p>
           ) : (
             <div className="card-grid">
-              {tasks.map((task) => (
-                <div className="task-card" key={task.id}>
+              {tasks.map((task, i) => (
+                <div
+                  className={`task-card ${getStatusClass(task.status)}`}
+                  key={task.id}
+                  style={{ animationDelay: `${i * 0.08}s` }}
+                >
+                  <div className="bento-dots" />
                   <div className="task-header">
                     <h4>{task.title}</h4>
-                    <span className="status-pill">{task.status}</span>
+                    <span className={`status-pill ${getPillClass(task.status)}`}>
+                      {task.status}
+                    </span>
                   </div>
                   <p>{task.description}</p>
                   <p><strong>Required Skills:</strong> {task.required_skills || "N/A"}</p>
