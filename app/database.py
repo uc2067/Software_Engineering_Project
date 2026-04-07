@@ -1,11 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DATABASE_URL = "sqlite:///./intellitrack.db"
+DATABASE_URL = "postgresql://postgres:Db123abc@localhost:5432/intellitrack"
 
-engine = create_engine(
-    DATABASE_URL, connect_args={"check_same_thread": False}
-)
+engine = create_engine(DATABASE_URL)
+
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
